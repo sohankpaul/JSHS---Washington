@@ -241,7 +241,7 @@ fisher.test(num.loss.her2)
 ### Pulling CNAs for one gene
 rhoa = g3["RHOA",]
 rhoa.mt = names(rhoa)[rhoa < 0]
-tgfb2 = g3["MYC",]
+tgfb2 = g3["TGFB2",]
 tgfb2.mt = names(tgfb2)[tgfb2 > 0]
 ### Get all sample ids that could potentially be MT for one of these (does the sample have CN calls)
 csamps = sampList[["All"]]
@@ -568,7 +568,7 @@ length(fgenes[which(fgenes %in% igenes)])
 ######
 ###Reading in CNA data by genes (-2 = deletion, -1 = loss, 0 = diploid, 1 = gain, 2 = amplification)
 ######
-gistic = read.delim("C:\\Users\\sohan\\OneDrive\\Desktop\\RhoA TGFb\\project_sohan\\project_sohan\\data\\TCGA_gistic2_CNAs\\all_BRCA.09_20_2019.all_thresholded.by_genes.txt", stringsAsFactors = F, check.names=F)
+gistic = read.delim("C:\\Users\\sohan\\OneDrive\\Desktop\\RhoA TGFb\\project_sohan\\project_sohan\\data\\METAMORPH_CNA\\all_METAMORPH.06_24_2018.all_thresholded.by_genes.txt", stringsAsFactors = F, check.names=F)
 #### New data frame that only contains cna information per gene and sample
 g3 = gistic[,-c(1:3)]
 ### Set rownames and colnames to gene names and samples respectively
@@ -579,7 +579,7 @@ g3 = g3[,colnames(g3)[colnames(g3) %in% vmeta$patient_id]]
 ### Likewise, limit meta data to those that had CNA data
 
 ### Pulling CNAs for one gene
-rhoa.FSS = g3["MYC",]
+rhoa.FSS = g3["RHOA",]
 ### Disply distribution of RHOA CNAs across TCGA
 hist(as.numeric(rhoa.FSS))
 #### Output table of different CNA categoies
@@ -616,7 +616,7 @@ fisher.test(num.loss.her2)
 ## enriched in specific subtypes? 
 
 ## Pulling CNAs for one gene in the TGFb pathway
-tgf.FSS = g3["RB1",]
+tgf.FSS = g3["TGFB1",]
 ### Display distribution of TGFB1 CNAs across TCGA
 hist(as.numeric(tgf.FSS))
 #### Output table of different CNA categoies
@@ -686,7 +686,7 @@ fisher.test(num.loss.her2)
 ## enriched in specific subtypes? 
 
 ## Pulling CNAs for one gene in the TGFb pathway
-tgf = g3["FOXM1",]
+tgf = g3["TGFB3",]
 ### Display distribution of TGFB2 CNAs across TCGA
 hist(as.numeric(tgf))
 #### Output table of different CNA categoies
@@ -720,16 +720,92 @@ fisher.test(num.loss.her2)
 
 ### Are TGFB1 loss and RHOA1 gain significantly co-occurrent or mutually exclusive? 
 ### Pulling CNAs for one gene
-rhoa = g3["MYC",]
+rhoa = g3["RHOA",]
 rhoa.mt = names(rhoa)[rhoa > 0]
-tgfb2 = g3["RB1",]
-tgfb2.mt = names(tgfb2)[tgfb2 < 0]
+tgfb1 = g3["TGFB1",]
+tgfb1.mt = names(tgfb1)[tgfb1 < 0]
 ### Get all sample ids that could potentially be MT for one of these (does the sample have CN calls)
 csamps = sampList[["All"]]
 ### Testing for correlation across all samples
 cont = table(csamps %in% rhoa.mt, csamps %in% tgfb2.mt)
 rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
 colnames(cont) = c("TGFB1.loss.WT", "TGFB1.loss.MT")
+cont
+fisher.test(cont)
+
+lm.analysis = summary(lm( c(csamps %in% rhoa.mt) ~ c(csamps %in% tgfb1.mt) ))
+lm.analysis
+cor.direction = sign(lm.analysis$coefficients[2,1])
+cor.direction
+## Negative cor.direction is mut ex, positive is co-occurrent
+
+
+#### Testing correlation within specific subtypes, let's try HR-/HER2-
+sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR-/HER2-" & !is.na(vmeta[csamps,]$receptor.subtype)]
+cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb2.mt)
+rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
+colnames(cont) = c("TGFB1.loss.WT", "TGFB1.loss.MT")
+cont
+fisher.test(cont)
+lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb1.mt) ))
+lm.analysis
+cor.direction = sign(lm.analysis$coefficients[2,1])
+cor.direction
+
+#### Testing correlation within specific subtypes, let's try HR+/HER2-
+sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR+/HER2-" & !is.na(vmeta[csamps,]$receptor.subtype)]
+cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb2.mt)
+rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
+colnames(cont) = c("TGFB1.loss.WT", "TGFB1.loss.MT")
+cont
+fisher.test(cont)
+lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb1.mt) ))
+lm.analysis
+cor.direction = sign(lm.analysis$coefficients[2,1])
+cor.direction
+
+#### Testing correlation within specific subtypes, let's try HR-/HER2+
+sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR-/HER2+" & !is.na(vmeta[csamps,]$receptor.subtype)]
+cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb2.mt)
+rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
+colnames(cont) = c("TGFB1.loss.WT", "TGFB1.loss.MT")
+cont
+fisher.test(cont)
+lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb1.mt) ))
+lm.analysis
+cor.direction = sign(lm.analysis$coefficients[2,1])
+cor.direction
+
+#### Testing correlation within specific subtypes, let's try HR+/HER2+
+sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR+/HER2+" & !is.na(vmeta[csamps,]$receptor.subtype)]
+cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb1.mt)
+rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
+colnames(cont) = c("TGFB1.loss.WT", "TGFB1.loss.MT")
+cont
+fisher.test(cont)
+lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb1.mt) ))
+lm.analysis
+cor.direction = sign(lm.analysis$coefficients[2,1])
+cor.direction
+
+
+
+
+
+
+
+### Are TGFB2 loss and RHOA gain significantly co-occurrent or mutually exclusive? 
+### Pulling CNAs for one gene
+rhoa = g3["RHOA",]
+rhoa.mt = names(rhoa)[rhoa > 0]
+tgfb2 = g3["TGFB2",]
+tgfb2.mt = names(tgfb2)[tgfb2 < 0]
+### Get all sample ids that could potentially be MT for one of these (does the sample have CN calls)
+csamps = sampList[["All"]]
+### Testing for correlation across all samples
+cont = table(csamps %in% rhoa.mt, csamps %in% tgfb2.mt)
+rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
+colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
 cont
 fisher.test(cont)
 
@@ -744,7 +820,7 @@ cor.direction
 sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR-/HER2-" & !is.na(vmeta[csamps,]$receptor.subtype)]
 cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb2.mt)
 rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
-colnames(cont) = c("TGFB1.loss.WT", "TGFB1.loss.MT")
+colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
 cont
 fisher.test(cont)
 lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb2.mt) ))
@@ -756,7 +832,7 @@ cor.direction
 sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR+/HER2-" & !is.na(vmeta[csamps,]$receptor.subtype)]
 cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb2.mt)
 rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
-colnames(cont) = c("TGFB1.loss.WT", "TGFB1.loss.MT")
+colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
 cont
 fisher.test(cont)
 lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb2.mt) ))
@@ -768,7 +844,7 @@ cor.direction
 sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR-/HER2+" & !is.na(vmeta[csamps,]$receptor.subtype)]
 cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb2.mt)
 rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
-colnames(cont) = c("TGFB1.loss.WT", "TGFB1.loss.MT")
+colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
 cont
 fisher.test(cont)
 lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb2.mt) ))
@@ -780,86 +856,10 @@ cor.direction
 sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR+/HER2+" & !is.na(vmeta[csamps,]$receptor.subtype)]
 cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb2.mt)
 rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
-colnames(cont) = c("TGFB1.loss.WT", "TGFB1.loss.MT")
+colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
 cont
 fisher.test(cont)
 lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb2.mt) ))
-lm.analysis
-cor.direction = sign(lm.analysis$coefficients[2,1])
-cor.direction
-
-
-
-
-
-
-
-### Are TGFB2 loss and RHOA gain significantly co-occurrent or mutually exclusive? 
-### Pulling CNAs for one gene
-rhoa = g3["MYC",]
-rhoa.mt = names(rhoa)[rhoa > 0]
-tgfb3 = g3["BRCA1",]
-tgfb3.mt = names(tgfb3)[tgfb3 < 0]
-### Get all sample ids that could potentially be MT for one of these (does the sample have CN calls)
-csamps = sampList[["All"]]
-### Testing for correlation across all samples
-cont = table(csamps %in% rhoa.mt, csamps %in% tgfb3.mt)
-rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
-colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
-cont
-fisher.test(cont)
-
-lm.analysis = summary(lm( c(csamps %in% rhoa.mt) ~ c(csamps %in% tgfb3.mt) ))
-lm.analysis
-cor.direction = sign(lm.analysis$coefficients[2,1])
-cor.direction
-## Negative cor.direction is mut ex, positive is co-occurrent
-
-
-#### Testing correlation within specific subtypes, let's try HR-/HER2-
-sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR-/HER2-" & !is.na(vmeta[csamps,]$receptor.subtype)]
-cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb3.mt)
-rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
-colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
-cont
-fisher.test(cont)
-lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb3.mt) ))
-lm.analysis
-cor.direction = sign(lm.analysis$coefficients[2,1])
-cor.direction
-
-#### Testing correlation within specific subtypes, let's try HR+/HER2-
-sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR+/HER2-" & !is.na(vmeta[csamps,]$receptor.subtype)]
-cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb3.mt)
-rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
-colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
-cont
-fisher.test(cont)
-lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb3.mt) ))
-lm.analysis
-cor.direction = sign(lm.analysis$coefficients[2,1])
-cor.direction
-
-#### Testing correlation within specific subtypes, let's try HR-/HER2+
-sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR-/HER2+" & !is.na(vmeta[csamps,]$receptor.subtype)]
-cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb3.mt)
-rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
-colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
-cont
-fisher.test(cont)
-lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb3.mt) ))
-lm.analysis
-cor.direction = sign(lm.analysis$coefficients[2,1])
-cor.direction
-
-#### Testing correlation within specific subtypes, let's try HR+/HER2+
-sub.csamps = csamps[vmeta[csamps,]$receptor.subtype == "HR+/HER2+" & !is.na(vmeta[csamps,]$receptor.subtype)]
-cont = table(sub.csamps %in% rhoa.mt, sub.csamps %in% tgfb3.mt)
-rownames(cont) = c("RHOA.gain.WT", "RHOA.gain.MT")
-colnames(cont) = c("TGFB2.loss.WT", "TGFB2.loss.MT")
-cont
-fisher.test(cont)
-lm.analysis = summary(lm( c(sub.csamps %in% rhoa.mt) ~ c(sub.csamps %in% tgfb3.mt) ))
 lm.analysis
 cor.direction = sign(lm.analysis$coefficients[2,1])
 cor.direction
@@ -873,9 +873,9 @@ cor.direction
 
 ### Are TGFB3 loss and RHOA loss significantly co-occurrent or mutually exclusive? 
 ### Pulling CNAs for one gene
-rhoa = g3["MYC",]
+rhoa = g3["RHOA",]
 rhoa.mt = names(rhoa)[rhoa > 0]
-tgfb3 = g3["FOXM1",]
+tgfb3 = g3["TGFB3",]
 tgfb3.mt = names(tgfb3)[tgfb3 > 0]
 ### Get all sample ids that could potentially be MT for one of these (does the sample have CN calls)
 csamps = sampList[["All"]]
